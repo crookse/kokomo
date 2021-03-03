@@ -5,50 +5,32 @@ const args = Deno.args.slice();
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();
 
-let filesRaw: {[key: string]: string} = {};
+let filesRaw: {[key: string]: Deno.Reader} = {};
 
 args.forEach((file: string) => {
-  filesRaw[file] = decoder.decode(Deno.readFileSync(file));
+  filesRaw[file] = new Deno.Buffer(Deno.readFileSync(file));
 });
 
-const reader = Deno.readFileSync("./mod.ts")
+// contents = `const encoder = new TextEncoder();
 
-const file = [];
+// function markStatementCovered(num: number) {
+//   Deno.writeFileSync("coverage.txt", encoder.encode(num as unknown as string), {append: true});
+// }
 
-for await (let line of readLines(new Deno.Buffer(reader.buffer))) {
-  if (line.includes("if")) {
-    file.push(line += " markStatementCovered(1);");
-    continue;
-  }
-  if (line.includes("else")) {
-    file.push(line += " markStatementCovered(1);");
-    continue;
-  }
+// ${contents}`;
 
-  file.push(line);
-}
-
-let contents = file.join("\n");
-
-contents = `const encoder = new TextEncoder();
-
-function markStatementCovered(num: number) {
-  Deno.writeFileSync("coverage.txt", encoder.encode(num as unknown as string), {append: true});
-}
-
-${contents}`;
-
-Deno.writeFileSync("./mod.rhumcoverage.ts", encoder.encode(contents));
+// Deno.writeFileSync("./mod.rhumcoverage.ts", encoder.encode(contents));
 
 
 
 
 
 
-const r = Deno.readFileSync("./mod_test.ts")
+// const r = Deno.readFileSync("./mod_test.ts")
 
-const f = [];
+// const f = [];
 
+for (const 
 for await (let line of readLines(new Deno.Buffer(r.buffer))) {
   if (line.includes(".ts;")) {
     line = line.replace(".ts;", ".rhumcoverage.ts;");
@@ -57,7 +39,7 @@ for await (let line of readLines(new Deno.Buffer(r.buffer))) {
   f.push(line);
 }
 
-Deno.writeFileSync("./mod_test.rhumcoverage.ts", encoder.encode(f.join("\n")));
+// Deno.writeFileSync("./mod_test.rhumcoverage.ts", encoder.encode(f.join("\n")));
 
 
 
@@ -66,11 +48,11 @@ Deno.writeFileSync("./mod_test.rhumcoverage.ts", encoder.encode(f.join("\n")));
 
 
 
-Deno.run({
-  cmd: [
-    "deno",
-    "run",
-    "-A",
-    "./mod_test.rhumcoverage.ts",
-  ]
-});
+// Deno.run({
+//   cmd: [
+//     "deno",
+//     "run",
+//     "-A",
+//     "./mod_test.rhumcoverage.ts",
+//   ]
+// });
