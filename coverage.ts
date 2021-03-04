@@ -2,8 +2,12 @@ import { readLines } from "https://deno.land/std@0.89.0/io/mod.ts";
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();
 
-const markAsCovered = `const encoder = new TextEncoder();
+const markAsCovered = `// START AUTO-GENERATED CODE ///////////////////////////////////////////////////
+
+const encoder = new TextEncoder();
 const decoder = new TextDecoder();
+
+const totalLines = {{ total_lines }};
 
 function markAsCovered(file: string, lineNumber: number, count: number): void {
   const contents = Deno.readFileSync("./coverage/coverage.json");
@@ -25,8 +29,13 @@ function markAsCovered(file: string, lineNumber: number, count: number): void {
   }
 
   json[file].lines[lineNumber]++;
-  Deno.writeFileSync("./coverage/coverage.json", encoder.encode(JSON.stringify(json)));
+  Deno.writeFileSync(
+    "./coverage/coverage.json",
+    encoder.encode(JSON.stringify(json))
+  );
 }
+
+// END AUTO-GENERATED CODE /////////////////////////////////////////////////////
 
 `;
 
@@ -74,14 +83,13 @@ filesToInstrument.forEach(async (file: string) => {
 
   for await (let line of readLines(fileRaw)) {
     if (line.includes("{")) {
-      line = line.trim() + ` /** AUTO-GENERATED LINE **/ markAsCovered("${file}", ${lineNumber}, 1);`;
+      line = line + ` /** AUTO-GENERATED LINE **/ markAsCovered("${file}", ${lineNumber}, 1);`;
     }
     lines.push(line);
     lineNumber++;
   }
 
-  let contents = `const totalLines = ${lineNumber}\n\n`;
-  contents += markAsCovered;
+  let contents = markAsCovered.replace("{{ total_lines }}", lineNumber.toString());
   contents += lines.join("\n");
   const encoded = encoder.encode(contents);
 

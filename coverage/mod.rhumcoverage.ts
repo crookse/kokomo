@@ -1,7 +1,9 @@
-const totalLines = 9
+// START AUTO-GENERATED CODE ///////////////////////////////////////////////////
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
+
+const totalLines = 9;
 
 function markAsCovered(file: string, lineNumber: number, count: number): void {
   const contents = Deno.readFileSync("./coverage/coverage.json");
@@ -23,11 +25,16 @@ function markAsCovered(file: string, lineNumber: number, count: number): void {
   }
 
   json[file].lines[lineNumber]++;
-  Deno.writeFileSync("./coverage/coverage.json", encoder.encode(JSON.stringify(json)));
+  Deno.writeFileSync(
+    "./coverage/coverage.json",
+    encoder.encode(JSON.stringify(json))
+  );
 }
 
+// END AUTO-GENERATED CODE /////////////////////////////////////////////////////
+
 export function a(a: boolean = false): boolean { /** AUTO-GENERATED LINE **/ markAsCovered("./mod.ts", 1, 1);
-if (a) { /** AUTO-GENERATED LINE **/ markAsCovered("./mod.ts", 2, 1);
+  if (a) { /** AUTO-GENERATED LINE **/ markAsCovered("./mod.ts", 2, 1);
     return true;
   }
 
