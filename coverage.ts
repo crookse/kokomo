@@ -6,20 +6,26 @@ const markAsCovered = `const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
 function markAsCovered(file: string, lineNumber: number, count: number): void {
-  const filename = "./coverage/" + file + ".coverage";
-  try {
-    const contents = Deno.readFileSync(filename);
-    let json = JSON.parse(decoder.decode(contents));
-    if (!json[lineNumber]) {
-      json[lineNumber] = 0;
-    }
-    json[lineNumber]++;
-    Deno.writeFileSync(filename, encoder.encode(JSON.stringify(json)));
-  } catch (error) {
-    Deno.writeFileSync(filename, encoder.encode(JSON.stringify({
-      [lineNumber]: count
-    })));
+  const contents = Deno.readFileSync("./coverage/coverage.json");
+
+  let json = JSON.parse(decoder.decode(contents));
+
+  if (!json[file]) {
+    json[file] = {
+      branches: {},
+      lines: {
+        total: totalLines,
+      },
+      statements: {},
+    };
   }
+
+  if (!json[file].lines[lineNumber]) {
+    json[file].lines[lineNumber] = 0;
+  }
+
+  json[file].lines[lineNumber]++;
+  Deno.writeFileSync("./coverage/coverage.json", encoder.encode(JSON.stringify(json)));
 }
 
 `;
@@ -29,6 +35,7 @@ try {
 } catch (error) {
 }
 Deno.mkdirSync("./coverage");
+Deno.writeFileSync("./coverage/coverage.json", encoder.encode("{}"));
 
 const args = Deno.args.slice();
 
@@ -73,7 +80,8 @@ filesToInstrument.forEach(async (file: string) => {
     lineNumber++;
   }
 
-  let contents = markAsCovered;
+  let contents = `const totalLines = ${lineNumber}\n\n`;
+  contents += markAsCovered;
   contents += lines.join("\n");
   const encoded = encoder.encode(contents);
 
@@ -85,7 +93,7 @@ filesInstrumented.forEach(async (fileInfo: any) => {
   Deno.writeFileSync("./coverage/" + fileInfo.filename, contents);
 });
 
-filesInstrumented.forEach(async (file: any) => {
+filesInstrumented.forEach(async (file: any, index: number) => {
   const filename = `./coverage/${file.filename}`;
   console.log("Running " + filename);
   const p = Deno.run({
@@ -100,4 +108,20 @@ filesInstrumented.forEach(async (file: any) => {
   });
 
   await p.status();
+
+  if (index + 1 == filesInstrumented.length) {
+    const coverage = JSON.parse(decoder.decode(Deno.readFileSync("./coverage/coverage.json")));
+    for (const file in coverage) {
+      const data = coverage[file];
+      const total = data.lines.total;
+      let totes = 0;
+      for (const line in data.lines) {
+        if (line != "total") {
+          totes += data.lines[line];
+        }
+      }
+      console.log();
+      console.log(`${file}\n  ` + ((totes / total) * 100).toFixed(2) + "% lines covered");
+    }
+  }
 });
