@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Drash Land | Kokomo - Code coverage tool</title>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous"/>
+    <link rel="stylesheet" href="prism.css">
+    <script src="https://kit.fontawesome.com/827ebac507.js" crossorigin="anonymous"></script>
+    <style type="text/css">
+      html {
+        scroll-behavior: smooth;
+      }
+      .line-highlight {
+        background: linear-gradient(to right, hsl(152deg 73% 58% / 26%) 70%, hsla(24, 20%, 50%,0));
+      }
+    </style>
+  </head>
+  
+  <body>
+    <div id="app">
+      <pre class="line-numbers" :data-line="coverage['./mod.ts'].lines_highlighted"><code class="language-typescript">{{ coverage["./mod.ts"].contents.trim() }}</code></pre>
+    </div>
+
+    <script src="prism.js"></script>
+    <script src="https://unpkg.com/vue@next"></script>
+    <script type="text/javascript">
+      const app = Vue.createApp({
+        data() {
+          return {
+            coverage: {
+              "./mod.ts": {
+                contents: `
+export function a(a: boolean = false, b: boolean = false): boolean {
+  if (a) {
+    if (b) {
+      return true;
+    }
+    return true;
+  }
+
+  return true;
+}
+`,
+                "branches": {},
+                "lines_highlighted": "1,2,3,4,6,9",
+                "lines": {
+                  "1": 3,
+                  "2": 3,
+                  "3": 1,
+                  "4": 1,
+                  "5": 0,
+                  "6": 2,
+                  "7": 0,
+                  "8": 0,
+                  "9": 1,
+                  "10": 0,
+                  "total": 10
+                },
+                "statements": {}
+              }
+            }
+          };
+        },
+      });
+      const vm = app.mount("#app");
+    </script>
+  </body>
+</html>
