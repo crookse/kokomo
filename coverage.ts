@@ -8,6 +8,7 @@ const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
 const totalLines = {{ total_lines }};
+const autoCovered = {{ auto_covered }};
 
 function markAsCovered(file: string, lineNumber: number, count: number): void {
   const contents = Deno.readFileSync("./coverage/coverage.json");
@@ -17,9 +18,9 @@ function markAsCovered(file: string, lineNumber: number, count: number): void {
   if (!json[file]) {
     json[file] = {
       branches: {},
-      lines: {
+      lines: Object.assign(autoCovered, {
         total: totalLines,
-      },
+      }),
       statements: {},
     };
   }
@@ -31,7 +32,7 @@ function markAsCovered(file: string, lineNumber: number, count: number): void {
   json[file].lines[lineNumber]++;
   Deno.writeFileSync(
     "./coverage/coverage.json",
-    encoder.encode(JSON.stringify(json))
+    encoder.encode(JSON.stringify(json, null, 2))
   );
 }
 
@@ -79,17 +80,51 @@ for (const name in filesRaw) {
 filesToInstrument.forEach(async (file: string) => {
   const fileRaw = new Deno.Buffer(Deno.readFileSync(file));
   const lines: string[] = [];
-  let lineNumber = 1;
+  let lineNumber = 0;
+  let lastLine: string = "";
+  let autoCovered: {[key: number]: number} = {};
 
   for await (let line of readLines(fileRaw)) {
+    lineNumber++;
+
+     lastLine = line.trim(); 
+
+    // Empty line? This is auto covered.
+    if (line.trim() == "") {
+      autoCovered[lineNumber] = 0;
+      lines.push(line);
+      continue;
+    }
+
+    // Ending branch line? This is auto covered.
+    if (line.trim() == "}") {
+      autoCovered[lineNumber] = 0;
+      lines.push(line);
+      continue;
+    }
+
+    // Branched line? Make sure to mark it as covered when it executes.
     if (line.includes("{")) {
       line = line + ` /** AUTO-GENERATED LINE **/ markAsCovered("${file}", ${lineNumber}, 1);`;
+      lines.push(line);
+      continue;
     }
-    lines.push(line);
-    lineNumber++;
+
+    // Returns statement? Make sure to mark it as covered when it executes.
+    if (line.trim().match(/^(return)/g)) {
+      line = `/** AUTO-GENERATED LINE **/ markAsCovered("${file}", ${lineNumber}, 1);` + line;
+      lines.push(line);
+      continue;
+    }
+  }
+
+  if (lastLine == "") {
+    delete autoCovered[lineNumber];
+    lineNumber--;
   }
 
   let contents = markAsCovered.replace("{{ total_lines }}", lineNumber.toString());
+  contents = contents.replace("{{ auto_covered }}", JSON.stringify(autoCovered, null, 2));
   contents += lines.join("\n");
   const encoded = encoder.encode(contents);
 
@@ -125,7 +160,7 @@ filesInstrumented.forEach(async (file: any, index: number) => {
       let totes = 0;
       for (const line in data.lines) {
         if (line != "total") {
-          totes += data.lines[line];
+          totes += 1;
         }
       }
       console.log();
